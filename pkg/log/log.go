@@ -1,0 +1,16 @@
+package log
+
+import (
+	"log/slog"
+	"os"
+)
+
+func New(level slog.Level) *slog.Logger {
+	return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: level,
+	}))
+}
+
+func Err(err error) slog.Attr {
+	return slog.String("error", err.Error())
+}

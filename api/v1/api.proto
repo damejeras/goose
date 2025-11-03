@@ -19,3 +19,41 @@ message SayHelloRequest {
 message SayHelloResponse {
   string message = 1;
 }
+
+// Auth service for user authentication
+service AuthService {
+  // Login with Google ID token
+  rpc Login(LoginRequest) returns (LoginResponse) {}
+  // Get current authenticated user
+  rpc GetCurrentUser(GetCurrentUserRequest) returns (GetCurrentUserResponse) {}
+  // Logout
+  rpc Logout(LogoutRequest) returns (LogoutResponse) {}
+}
+
+message LoginRequest {
+  string google_id_token = 1;
+}
+
+message LoginResponse {
+  string jwt = 1;
+  User user = 2;
+}
+
+message GetCurrentUserRequest {}
+
+message GetCurrentUserResponse {
+  User user = 1;
+}
+
+message LogoutRequest {}
+
+message LogoutResponse {
+  bool success = 1;
+}
+
+message User {
+  int64 id = 1;
+  string email = 2;
+  string google_id = 3;
+  string name = 4;
+}

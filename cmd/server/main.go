@@ -1,27 +1,108 @@
 package main
 
 import (
+	"context"
+	"encoding/base64"
+	"flag"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
+	"time"
 
+	"connectrpc.com/connect"
 	"github.com/damejeras/goose/api/v1/v1connect"
+	"github.com/damejeras/goose/db"
+	"github.com/damejeras/goose/db/sqlc"
 	"github.com/damejeras/goose/frontend"
+	"github.com/damejeras/goose/internal/auth"
 	"github.com/damejeras/goose/internal/greeter"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
 
 func main() {
+	// Parse command line flags
+	googleClientID := flag.String("google-client-id", os.Getenv("GOOGLE_CLIENT_ID"), "Google OAuth client ID")
+	jwtSecretStr := flag.String("jwt-secret", os.Getenv("JWT_SECRET"), "JWT secret (base64 encoded)")
+	dbPath := flag.String("db", "storage/goose.db", "Database path")
+	port := flag.String("port", "8080", "Server port")
+	flag.Parse()
+
+	// Setup logger
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
+
+	// Validate required config
+	if *googleClientID == "" {
+		logger.Error("GOOGLE_CLIENT_ID is required")
+		os.Exit(1)
+	}
+
+	// Setup JWT secret
+	var jwtSecret []byte
+	var err error
+	if *jwtSecretStr != "" {
+		jwtSecret, err = base64.StdEncoding.DecodeString(*jwtSecretStr)
+		if err != nil {
+			logger.Error("failed to decode JWT secret", "error", err)
+			os.Exit(1)
+		}
+	} else {
+		// Generate random secret for development
+		jwtSecret, err = auth.GenerateRandomSecret()
+		if err != nil {
+			logger.Error("failed to generate JWT secret", "error", err)
+			os.Exit(1)
+		}
+		logger.Warn("using randomly generated JWT secret - tokens will not persist across restarts")
+	}
+
+	// Open database
+	database, err := db.Open(context.Background(), logger, *dbPath)
+	if err != nil {
+		logger.Error("failed to open database", "error", err)
+		os.Exit(1)
+	}
+	defer database.Close()
+
+	queries := sqlc.New(database)
+
+	// Setup auth service
+	authService := auth.NewService(auth.Config{
+		GoogleClientID: *googleClientID,
+		JWTSecret:      jwtSecret,
+		JWTExpiration:  24 * time.Hour,
+	})
+
+	// Create auth interceptor - specify public methods that don't require auth
+	publicMethods := []string{
+		"/api.v1.AuthService/Login",
+		"/api.v1.GreeterService/SayHello", // Keep greeter public for testing
+	}
+	authInterceptor := auth.NewInterceptor(authService, publicMethods)
+
+	// Setup HTTP mux
 	mux := http.NewServeMux()
 
-	path, handler := v1connect.NewGreeterServiceHandler(&greeter.Server{})
-	mux.Handle(path, handler)
+	// Register greeter service
+	greeterPath, greeterHandler := v1connect.NewGreeterServiceHandler(&greeter.Server{})
+	mux.Handle(greeterPath, greeterHandler)
+
+	// Register auth service with interceptor
+	authPath, authHandler := v1connect.NewAuthServiceHandler(
+		auth.NewServer(authService, queries, logger),
+		connect.WithInterceptors(authInterceptor),
+	)
+	mux.Handle(authPath, authHandler)
 
 	// Serve static files from frontend package
 	mux.Handle("/", frontend.Handler())
 
-	log.Println("Server listening on :8080")
-	if err := http.ListenAndServe(":8080", h2c.NewHandler(mux, &http2.Server{})); err != nil {
+	addr := ":" + *port
+	logger.Info("server starting", "addr", addr)
+	if err := http.ListenAndServe(addr, h2c.NewHandler(mux, &http2.Server{})); err != nil {
 		log.Fatal(err)
 	}
 }
