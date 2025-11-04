@@ -2,23 +2,9 @@ syntax = "proto3";
 
 package api.v1;
 
-option go_package = "github.com/damejeras/goose/api/v1";
+import "v1/common.proto";
 
-// The greeter service definition.
-service GreeterService {
-  // Sends a greeting
-  rpc SayHello(SayHelloRequest) returns (SayHelloResponse) {}
-}
-
-// The request message containing the user's name.
-message SayHelloRequest {
-  string name = 1;
-}
-
-// The response message containing the greetings.
-message SayHelloResponse {
-  string message = 1;
-}
+option go_package = "github.com/damejeras/goose/api/gen/go/v1";
 
 // Auth service for user authentication
 service AuthService {
@@ -49,11 +35,4 @@ message LogoutRequest {}
 
 message LogoutResponse {
   bool success = 1;
-}
-
-message User {
-  int64 id = 1;
-  string email = 2;
-  string google_id = 3;
-  string name = 4;
 }

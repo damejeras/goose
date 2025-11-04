@@ -1,19 +1,9 @@
-import { useState, useEffect } from 'react'
 import { Stat } from '@/components/stat'
-import { Avatar } from '@/components/avatar'
 import { Heading, Subheading } from '@/components/heading'
 import { Select } from '@/components/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table'
-import { getRecentOrders } from '@/data'
-import type { Order } from '@/data'
+import { Table, TableHead, TableHeader, TableRow } from '@/components/table'
 
 export default function Home() {
-  const [orders, setOrders] = useState<Order[]>([])
-
-  useEffect(() => {
-    getRecentOrders().then(setOrders)
-  }, [])
-
   return (
     <>
       <Heading>Good afternoon, Admin</Heading>
@@ -45,22 +35,6 @@ export default function Home() {
             <TableHeader className="text-right">Amount</TableHeader>
           </TableRow>
         </TableHead>
-        <TableBody>
-          {orders.map((order) => (
-            <TableRow key={order.id} href={order.url} title={`Order #${order.id}`}>
-              <TableCell>{order.id}</TableCell>
-              <TableCell className="text-zinc-500">{order.date}</TableCell>
-              <TableCell>{order.customer.name}</TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Avatar src={order.event.thumbUrl} className="size-6" />
-                  <span>{order.event.name}</span>
-                </div>
-              </TableCell>
-              <TableCell className="text-right">{order.amount.usd}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
       </Table>
     </>
   )

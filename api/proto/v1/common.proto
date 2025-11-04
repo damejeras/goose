@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package api.v1;
+
+option go_package = "github.com/damejeras/goose/api/gen/go/v1";
+
+// User represents a user in the system
+message User {
+  int64 id = 1;
+  string email = 2;
+  string google_id = 3;
+  string name = 4;
+}

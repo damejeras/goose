@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"connectrpc.com/connect"
-	apiv1 "github.com/damejeras/goose/api/v1"
+	apiv1 "github.com/damejeras/goose/api/gen/go/v1"
 )
 
 type Server struct{}

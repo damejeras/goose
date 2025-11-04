@@ -6,7 +6,19 @@ package sqlc
 
 import (
 	"database/sql"
+	"time"
 )
+
+type ApiKey struct {
+	ID         string
+	UserID     int64
+	Name       string
+	KeyHash    string
+	KeyPrefix  string
+	KeySuffix  string
+	CreatedAt  time.Time
+	LastUsedAt sql.NullTime
+}
 
 type User struct {
 	ID          int64

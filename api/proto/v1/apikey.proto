@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package api.v1;
+
+import "v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/damejeras/goose/api/gen/go/v1";
+
+// API Key service for managing user API keys
+service APIKeyService {
+  // Create a new API key (returns unmasked key)
+  rpc CreateAPIKey(CreateAPIKeyRequest) returns (CreateAPIKeyResponse) {}
+  // List all API keys for the current user (returns masked keys)
+  rpc ListAPIKeys(ListAPIKeysRequest) returns (ListAPIKeysResponse) {}
+  // Delete an API key
+  rpc DeleteAPIKey(DeleteAPIKeyRequest) returns (DeleteAPIKeyResponse) {}
+  // Update an API key (rename only)
+  rpc UpdateAPIKey(UpdateAPIKeyRequest) returns (UpdateAPIKeyResponse) {}
+}
+
+message APIKey {
+  string id = 1;
+  string name = 2;
+  string key_masked = 3; // Masked version like "gsk_****...****1234"
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp last_used_at = 5;
+}
+
+message CreateAPIKeyRequest {
+  string name = 1;
+}
+
+message CreateAPIKeyResponse {
+  string id = 1;
+  string name = 2;
+  string key = 3; // Full unmasked key - only shown once
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message ListAPIKeysRequest {}
+
+message ListAPIKeysResponse {
+  repeated APIKey api_keys = 1;
+}
+
+message DeleteAPIKeyRequest {
+  string id = 1;
+}
+
+message DeleteAPIKeyResponse {
+  bool success = 1;
+}
+
+message UpdateAPIKeyRequest {
+  string id = 1;
+  string name = 2;
+}
+
+message UpdateAPIKeyResponse {
+  APIKey api_key = 1;
+}

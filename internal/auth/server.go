@@ -6,7 +6,7 @@ import (
 	"log/slog"
 
 	"connectrpc.com/connect"
-	v1 "github.com/damejeras/goose/api/v1"
+	v1 "github.com/damejeras/goose/api/gen/go/v1"
 	"github.com/damejeras/goose/db/sqlc"
 )
 

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { apiClient } from '../lib/apiClient'
-import type { User as ApiUser } from '../lib/api/v1/api_pb'
+import type { User as ApiUser } from '../lib/api/v1/common_pb'
 
 interface User {
   id: string

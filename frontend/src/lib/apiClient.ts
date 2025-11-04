@@ -1,6 +1,7 @@
 import { createClient } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
-import { AuthService } from "./api/v1/api_pb";
+import { AuthService } from "./api/v1/auth_pb";
+import { APIKeyService } from "./api/v1/apikey_pb";
 
 /**
  * API Client for making authenticated requests to the backend
@@ -9,6 +10,7 @@ import { AuthService } from "./api/v1/api_pb";
 class ApiClient {
   private transport;
   private authClient: ReturnType<typeof createClient<typeof AuthService>>;
+  private apiKeyClient: ReturnType<typeof createClient<typeof APIKeyService>>;
 
   constructor() {
     // Create transport for Connect RPC
@@ -29,6 +31,9 @@ class ApiClient {
 
     // Create auth service client
     this.authClient = createClient(AuthService, this.transport);
+
+    // Create API key service client
+    this.apiKeyClient = createClient(APIKeyService, this.transport);
   }
 
   /**
@@ -57,6 +62,13 @@ class ApiClient {
    */
   get auth() {
     return this.authClient;
+  }
+
+  /**
+   * Get the API key service client
+   */
+  get apiKey() {
+    return this.apiKeyClient;
   }
 }
 

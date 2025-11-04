@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"time"
@@ -13,10 +12,10 @@ import (
 )
 
 var (
-	ErrInvalidToken     = errors.New("invalid token")
-	ErrTokenExpired     = errors.New("token expired")
-	ErrUnauthorized     = errors.New("unauthorized")
-	ErrMissingToken     = errors.New("missing token")
+	ErrInvalidToken = errors.New("invalid token")
+	ErrTokenExpired = errors.New("token expired")
+	ErrUnauthorized = errors.New("unauthorized")
+	ErrMissingToken = errors.New("missing token")
 )
 
 type Config struct {
@@ -38,11 +37,11 @@ func NewService(config Config) *Service {
 
 // GoogleTokenInfo contains the validated information from a Google ID token
 type GoogleTokenInfo struct {
-	Email      string
-	GoogleID   string
-	Name       string
-	Picture    string
-	Verified   bool
+	Email    string
+	GoogleID string
+	Name     string
+	Picture  string
+	Verified bool
 }
 
 // ValidateGoogleIDToken validates a Google ID token and extracts user information
@@ -79,11 +78,11 @@ func (s *Service) ValidateGoogleIDToken(ctx context.Context, idToken string) (*G
 	}
 
 	return &GoogleTokenInfo{
-		Email:      email,
-		GoogleID:   sub,
-		Name:       name,
-		Picture:    picture,
-		Verified:   emailVerified,
+		Email:    email,
+		GoogleID: sub,
+		Name:     name,
+		Picture:  picture,
+		Verified: emailVerified,
 	}, nil
 }
 
@@ -139,13 +138,4 @@ func GenerateRandomSecret() ([]byte, error) {
 		return nil, err
 	}
 	return secret, nil
-}
-
-// GenerateRandomSecretString generates a random secret as a base64 string
-func GenerateRandomSecretString() (string, error) {
-	secret, err := GenerateRandomSecret()
-	if err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(secret), nil
 }

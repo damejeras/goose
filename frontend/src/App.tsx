@@ -5,7 +5,7 @@ import { DashboardLayout } from "@/layouts/DashboardLayout";
 
 // Lazy load pages for code splitting
 const Home = lazy(() => import("@/pages/Home"));
-const Settings = lazy(() => import("@/pages/Settings"));
+const APIKeys = lazy(() => import("@/pages/APIKeys"));
 const Login = lazy(() => import("@/pages/Login"));
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -59,11 +59,11 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/settings"
+          path="/api-keys"
           element={
             <ProtectedRoute>
               <DashboardLayout>
-                <Settings />
+                <APIKeys />
               </DashboardLayout>
             </ProtectedRoute>
           }

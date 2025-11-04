@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	"github.com/damejeras/goose/api/v1/v1connect"
+	"github.com/damejeras/goose/api/gen/go/v1/v1connect"
 	"github.com/damejeras/goose/db"
 	"github.com/damejeras/goose/db/sqlc"
 	"github.com/damejeras/goose/frontend"
+	"github.com/damejeras/goose/internal/apikey"
 	"github.com/damejeras/goose/internal/auth"
-	"github.com/damejeras/goose/internal/greeter"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -40,7 +40,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Setup JWT secret
 	var jwtSecret []byte
 	var err error
 	if *jwtSecretStr != "" {
@@ -50,7 +49,7 @@ func main() {
 			os.Exit(1)
 		}
 	} else {
-		// Generate random secret for development
+		// generateKey random secret for development
 		jwtSecret, err = auth.GenerateRandomSecret()
 		if err != nil {
 			logger.Error("failed to generate JWT secret", "error", err)
@@ -69,7 +68,6 @@ func main() {
 
 	queries := sqlc.New(database)
 
-	// Setup auth service
 	authService := auth.NewService(auth.Config{
 		GoogleClientID: *googleClientID,
 		JWTSecret:      jwtSecret,
@@ -86,18 +84,21 @@ func main() {
 	// Setup HTTP mux
 	mux := http.NewServeMux()
 
-	// Register greeter service
-	greeterPath, greeterHandler := v1connect.NewGreeterServiceHandler(&greeter.Server{})
-	mux.Handle(greeterPath, greeterHandler)
-
 	// Register auth service with interceptor
 	authPath, authHandler := v1connect.NewAuthServiceHandler(
 		auth.NewServer(authService, queries, logger),
 		connect.WithInterceptors(authInterceptor),
 	)
+
 	mux.Handle(authPath, authHandler)
 
-	// Serve static files from frontend package
+	// Register API key service with interceptor (requires authentication)
+	apiKeyPath, apiKeyHandler := v1connect.NewAPIKeyServiceHandler(
+		apikey.NewServer(queries, logger),
+		connect.WithInterceptors(authInterceptor),
+	)
+	mux.Handle(apiKeyPath, apiKeyHandler)
+
 	mux.Handle("/", frontend.Handler())
 
 	addr := ":" + *port

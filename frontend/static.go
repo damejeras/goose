@@ -1,7 +1,6 @@
 package frontend
 
 import (
-	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -36,33 +35,5 @@ func NewSPAHandler(distPath string) http.Handler {
 
 		// File exists, serve it
 		http.ServeFile(w, r, path)
-	})
-}
-
-// NewSPAHandlerFS creates an HTTP handler that serves static files from an embedded filesystem.
-// If a requested file is not found, it serves index.html to support client-side routing.
-func NewSPAHandlerFS(fsys fs.FS) http.Handler {
-	// Wrap the filesystem with http.FS for proper serving
-	httpFS := http.FS(fsys)
-	fileServer := http.FileServer(httpFS)
-
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Clean the path to prevent directory traversal
-		path := r.URL.Path
-		if path == "/" {
-			path = "/index.html"
-		}
-
-		// Try to open the file (remove leading slash for fs.FS)
-		_, err := fsys.Open(path[1:])
-		if err != nil {
-			// File doesn't exist, serve index.html
-			r.URL.Path = "/index.html"
-			fileServer.ServeHTTP(w, r)
-			return
-		}
-
-		// File exists, serve it normally
-		fileServer.ServeHTTP(w, r)
 	})
 }
